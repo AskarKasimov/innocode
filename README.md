@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InnoCode
 
-## Getting Started
+Auto-grading MVP: students submit code, Judge0 runs it against tests, an LLM audits the
+solution against teacher criteria, teachers review and approve/decline.
 
-First, run the development server:
+Stack: Next.js 16 (App Router), Prisma + Postgres, Judge0 (code execution),
+OpenAI-compatible LLM.
+
+## Prerequisites
+
+- Node 20+
+- Docker (see **Judge0 requires cgroup v1** below — important on macOS)
+- An OpenAI-compatible API key
+
+## Setup
 
 ```bash
+# 1. env
+cp .env.example .env
+#   then set a real OPENAI_API_KEY in .env
+
+# 2. bring up Postgres + Judge0
+docker compose up -d
+
+# 3. app DB schema + demo data
+npm run db:migrate
+npm run db:seed
+
+# 4. dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Student submit page: http://localhost:3000/submit
+- Teacher dashboard: http://localhost:3000/teacher (password = `TEACHER_PASSWORD` in `.env`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Judge0 requires cgroup v1
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Judge0 1.13.x's `isolate` sandbox needs **cgroup v1**. It reads
+`/sys/fs/cgroup/memory/...`, which does **not** exist on hosts using the cgroup v2
+unified hierarchy — including **Docker Desktop on macOS**.
 
-## Learn More
+Symptom: every submission returns status `Internal Error` (id 13). Worker log shows:
 
-To learn more about Next.js, take a look at the following resources:
+```
+Failed to create control group /sys/fs/cgroup/memory/box-N/: No such file or directory
+No such file or directory @ rb_sysopen - /box/script.py
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This is a host-kernel issue, **not** a compose or app-code problem — `privileged: true`
+is already set and does not help. No compose flag creates the v1 memory controller path.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Fix on macOS: run Docker on a cgroup-v1 VM via colima
 
-## Deploy on Vercel
+```bash
+brew install colima
+colima start --cgroups v1 --cpu 4 --memory 6
+docker context use colima
+docker compose up -d      # rebuild the Judge0 stack on the v1 VM
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Switch back to Docker Desktop anytime with `docker context use desktop-linux`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Fix on a Linux host
+
+Boot the kernel with the legacy hierarchy, then reboot:
+
+```
+systemd.unified_cgroup_hierarchy=0
+```
+
+## Scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Next.js dev server |
+| `npm test` | Vitest unit suite |
+| `npm run db:migrate` | Apply Prisma migrations |
+| `npm run db:seed` | Seed demo assignment |
+| `npm run db:generate` | Regenerate Prisma client |
+
+## Architecture
+
+- `src/lib/judge0/` — Judge0 batch client (behind an interface)
+- `src/lib/llm/` — OpenAI-compatible client + zod-validated response schema
+- `src/lib/pipeline/` — submission processing: TESTING → ANALYZING → DONE / ERROR
+- `src/lib/category.ts` — derives risk category from LLM flags
+- `src/lib/csv.ts` — RFC4180 CSV export
+- `src/app/submit/` — student flow with status polling
+- `src/app/teacher/` — auth, assignment CRUD, submission review
