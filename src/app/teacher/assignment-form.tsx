@@ -13,7 +13,7 @@ export function AssignmentForm() {
     <form action={action} style={{ display: "grid", gap: 8, maxWidth: 640 }}>
       <input name="title" placeholder="Title" required />
       <textarea name="description" placeholder="Description" rows={3} required />
-      <input name="language" type="number" placeholder="Judge0 language_id (e.g. 71 Python)" required />
+      <input name="language" type="text" placeholder="Language (e.g. python, javascript, cpp)" required />
       <textarea name="criteria" placeholder="One criterion per line" rows={4} />
       <textarea
         name="tests"

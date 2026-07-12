@@ -20,7 +20,7 @@ export async function createAssignment(formData: FormData) {
   await requireTeacher();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
-  const language = Number(formData.get("language"));
+  const language = String(formData.get("language") ?? "").trim();
   const criteria = String(formData.get("criteria") ?? "")
     .split("\n").map((s) => s.trim()).filter(Boolean);
   const tests = String(formData.get("tests") ?? "")

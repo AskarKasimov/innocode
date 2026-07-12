@@ -14,7 +14,7 @@ function buildUserPrompt(input: AnalyzeInput): string {
     .map((t, i) => `Test ${i + 1}: ${t.passed ? "PASS" : "FAIL"} (${t.statusDescription})`)
     .join("\n");
   return [
-    `Language id (Judge0): ${input.language}`,
+    `Language: ${input.language}`,
     `Criteria:\n${input.criteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}`,
     `Test results:\n${tests || "(none)"}`,
     `Solution source code:\n\`\`\`\n${input.sourceCode}\n\`\`\``,

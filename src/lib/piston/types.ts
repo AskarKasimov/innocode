@@ -13,10 +13,10 @@ export interface TestResult {
 
 export interface RunTestsInput {
   sourceCode: string;
-  languageId: number;
+  language: string;
   tests: TestCase[];
 }
 
-export interface Judge0Client {
+export interface CodeRunner {
   runTests(input: RunTestsInput): Promise<TestResult[]>;
 }

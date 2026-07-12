@@ -11,7 +11,7 @@ function makeDeps(overrides: Partial<PipelineDeps> = {}): {
   const submission = {
     id: "s1",
     sourceCode: "print(1)",
-    assignment: { language: 71, criteria: ["Uses iteration"], tests: [{ stdin: "", expectedStdout: "1" }] },
+    assignment: { language: "python", criteria: ["Uses iteration"], tests: [{ stdin: "", expectedStdout: "1" }] },
   };
   const deps: PipelineDeps = {
     prisma: {
@@ -29,9 +29,9 @@ function makeDeps(overrides: Partial<PipelineDeps> = {}): {
         }),
       },
     } as any,
-    judge0: {
+    runner: {
       runTests: vi.fn().mockResolvedValue([
-        { stdin: "", expectedStdout: "1", actualStdout: "1", passed: true, statusDescription: "Accepted" },
+        { stdin: "", expectedStdout: "1", actualStdout: "1", passed: true, statusDescription: "OK" },
       ]),
     },
     llm: {
@@ -54,9 +54,9 @@ describe("processSubmission", () => {
     expect(done.aiCategory).toBe("LOW_RISK");
   });
 
-  it("sets ERROR + errorMessage when judge0 throws", async () => {
+  it("sets ERROR + errorMessage when the code runner throws", async () => {
     const { deps, updates } = makeDeps({
-      judge0: { runTests: vi.fn().mockRejectedValue(new Error("boom")) },
+      runner: { runTests: vi.fn().mockRejectedValue(new Error("boom")) },
     });
     await processSubmission("s1", deps);
     const last = updates[updates.length - 1];

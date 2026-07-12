@@ -12,7 +12,7 @@ async function main() {
     data: {
       title: "Sum of two numbers",
       description: "Read two integers from stdin (space-separated) and print their sum.",
-      language: 71, // Judge0 Python 3
+      language: "python",
       criteria: [
         "Reads input from stdin",
         "Computes the sum with a built-in arithmetic operator (no external libraries)",

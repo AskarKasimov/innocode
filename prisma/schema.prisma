@@ -37,7 +37,7 @@ model Assignment {
   id          String   @id @default(cuid())
   title       String
   description String
-  language    Int
+  language    String
   criteria    Json
   tests       Json
   createdAt   DateTime @default(now())

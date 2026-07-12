@@ -23,7 +23,7 @@ export function parseLlmResponse(content: string): LlmResponse {
 
 export interface AnalyzeInput {
   sourceCode: string;
-  language: number;
+  language: string;
   criteria: string[];
   testResults: { passed: boolean; statusDescription: string }[];
 }

@@ -1,11 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
 import { deriveCategory, type FlagVerdictValue } from "@/lib/category";
-import type { Judge0Client } from "@/lib/judge0/types";
+import type { CodeRunner } from "@/lib/piston/types";
 import type { LlmClient } from "@/lib/llm/types";
 
 export interface PipelineDeps {
   prisma: Pick<PrismaClient, "submission" | "flag"> | any;
-  judge0: Judge0Client;
+  runner: CodeRunner;
   llm: LlmClient;
 }
 
@@ -16,7 +16,7 @@ const VERDICT_MAP: Record<string, FlagVerdictValue> = {
 };
 
 export async function processSubmission(submissionId: string, deps: PipelineDeps): Promise<void> {
-  const { prisma, judge0, llm } = deps;
+  const { prisma, runner, llm } = deps;
   try {
     const submission = await prisma.submission.findUniqueOrThrow({
       where: { id: submissionId },
@@ -27,9 +27,9 @@ export async function processSubmission(submissionId: string, deps: PipelineDeps
     const tests = assignment.tests as { stdin: string; expectedStdout: string }[];
 
     await prisma.submission.update({ where: { id: submissionId }, data: { status: "TESTING" } });
-    const testResults = await judge0.runTests({
+    const testResults = await runner.runTests({
       sourceCode: submission.sourceCode,
-      languageId: assignment.language,
+      language: assignment.language,
       tests,
     });
     await prisma.submission.update({

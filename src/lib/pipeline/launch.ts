@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/db";
-import { HttpJudge0Client } from "@/lib/judge0/client";
+import { PistonClient } from "@/lib/piston/client";
 import { OpenAiCompatibleLlmClient } from "@/lib/llm/client";
 import { processSubmission } from "./process";
 
 export function launchProcessing(submissionId: string): void {
   const deps = {
     prisma,
-    judge0: new HttpJudge0Client(),
+    runner: new PistonClient(),
     llm: new OpenAiCompatibleLlmClient(),
   };
   // Intentionally not awaited: MVP in-process background work.
