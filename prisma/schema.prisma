@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubmissionStatus {
+  PENDING
+  TESTING
+  ANALYZING
+  DONE
+  ERROR
+}
+
+enum AiCategory {
+  LOW_RISK
+  NEEDS_REVIEW
+  INSUFFICIENT_EVIDENCE
+}
+
+enum TeacherDecision {
+  NONE
+  APPROVED
+  DECLINED
+}
+
+enum FlagVerdict {
+  OK
+  VIOLATION
+  INSUFFICIENT_EVIDENCE
+}
+
+model Assignment {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  language    Int
+  criteria    Json
+  tests       Json
+  createdAt   DateTime @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id              String           @id @default(cuid())
+  assignmentId    String
+  assignment      Assignment       @relation(fields: [assignmentId], references: [id])
+  studentName     String
+  sourceCode      String
+  status          SubmissionStatus @default(PENDING)
+  errorMessage    String?
+  testResults     Json?
+  aiCategory      AiCategory?
+  teacherDecision TeacherDecision  @default(NONE)
+  createdAt       DateTime         @default(now())
+  flags           Flag[]
+}
+
+model Flag {
+  id           String      @id @default(cuid())
+  submissionId String
+  submission   Submission  @relation(fields: [submissionId], references: [id])
+  criterion    String
+  verdict      FlagVerdict
+  codeSnippet  String
+  explanation  String
+}
