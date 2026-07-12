@@ -22,6 +22,27 @@ services:
     privileged: true
     restart: unless-stopped
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      DATABASE_URL: "postgresql://innocode:innocode@app-db:5432/innocode?schema=public"
+      PISTON_URL: "http://piston:2000"
+    volumes:
+      - .:/app
+      - web-node-modules:/app/node_modules
+      - web-next-cache:/app/.next
+    depends_on:
+      - app-db
+      - piston
+    restart: unless-stopped
+
 volumes:
   app-db-data:
   piston-packages:
+  web-node-modules:
+  web-next-cache:

@@ -8,34 +8,45 @@ OpenAI-compatible LLM.
 
 ## Prerequisites
 
-- Node 20+
 - Docker
+- Node 20+ (only needed if you're editing code / running `npm test` outside the container)
 - An OpenAI-compatible API key
 
 ## Setup
+
+Everything — Postgres, Piston, and the Next.js app itself — runs via `docker compose`.
 
 ```bash
 # 1. env
 cp .env.example .env
 #   then set a real OPENAI_API_KEY in .env
 
-# 2. bring up Postgres + Piston
-docker compose up -d
+# 2. bring up Postgres + Piston + the app (builds the app image on first run)
+docker compose up -d --build
 
 # 3. install the language runtimes assignments will use (Piston ships with none by default)
 curl -s -X POST http://localhost:2000/api/v2/packages -H "Content-Type: application/json" \
   -d '{"language":"python","version":"3.12.0"}'
 
-# 4. app DB schema + demo data
-npm run db:migrate
-npm run db:seed
-
-# 5. dev server
-npm run dev
+# 4. app DB schema + demo data (inside the app container)
+docker compose exec web npx prisma migrate deploy
+docker compose exec web npm run db:seed
 ```
 
 - Student submit page: http://localhost:3000/submit
 - Teacher dashboard: http://localhost:3000/teacher (password = `TEACHER_PASSWORD` in `.env`)
+
+The `web` service bind-mounts the repo into the container, so editing source on the host
+hot-reloads inside it — no rebuild needed for code changes. Rebuild (`docker compose up -d
+--build web`) only after changing `package.json` or the `Dockerfile`.
+
+### Running without Docker for the app
+
+If you'd rather run Next.js on the host (only Postgres + Piston in Docker), skip the `web`
+service and run `npm run dev` directly — just point `.env`'s `DATABASE_URL`/`PISTON_URL`
+at the host-published ports (`localhost:5433` / `localhost:2000`, already the defaults in
+`.env.example`), then use `npm run db:migrate` / `npm run db:seed` instead of the
+`docker compose exec` forms above.
 
 ### Why Piston, not Judge0
 
