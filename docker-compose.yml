@@ -69,6 +69,9 @@ services:
     restart: "no"
 
   seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: innocode-app:local
     command: ["npm", "run", "db:seed"]
     env_file: .env
