@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# docker dev caches (piston package downloads, ...) — host bind mounts, not for git
+/.docker-cache
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

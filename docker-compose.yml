@@ -21,7 +21,7 @@ services:
     ports:
       - "2000:2000"
     volumes:
-      - piston-packages:/piston/packages
+      - ./.docker-cache/piston-packages:/piston/packages
     tmpfs:
       - /piston/jobs:exec
     privileged: true
@@ -106,6 +106,5 @@ services:
 
 volumes:
   app-db-data:
-  piston-packages:
   web-node-modules:
   web-next-cache:
