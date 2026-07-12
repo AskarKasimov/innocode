@@ -3,11 +3,11 @@ import { processSubmission, type PipelineDeps } from "../pipeline/process";
 
 function makeDeps(overrides: Partial<PipelineDeps> = {}): {
   deps: PipelineDeps;
-  updates: any[];
-  createdFlags: any[];
+  updates: Record<string, unknown>[];
+  createdFlags: Record<string, unknown>[];
 } {
-  const updates: any[] = [];
-  const createdFlags: any[] = [];
+  const updates: Record<string, unknown>[] = [];
+  const createdFlags: Record<string, unknown>[] = [];
   const submission = {
     id: "s1",
     sourceCode: "print(1)",
@@ -28,6 +28,7 @@ function makeDeps(overrides: Partial<PipelineDeps> = {}): {
           return Promise.resolve({});
         }),
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock only implements the 2 methods the pipeline calls, not the full Prisma delegate
     } as any,
     runner: {
       runTests: vi.fn().mockResolvedValue([
@@ -50,7 +51,7 @@ describe("processSubmission", () => {
     await processSubmission("s1", deps);
     const statuses = updates.map((u) => u.status).filter(Boolean);
     expect(statuses).toEqual(["TESTING", "ANALYZING", "DONE"]);
-    const done = updates.find((u) => u.status === "DONE");
+    const done = updates.find((u) => u.status === "DONE")!;
     expect(done.aiCategory).toBe("LOW_RISK");
   });
 
@@ -73,7 +74,7 @@ describe("processSubmission", () => {
       },
     });
     await processSubmission("s1", deps);
-    const done = updates.find((u) => u.status === "DONE");
+    const done = updates.find((u) => u.status === "DONE")!;
     expect(done.aiCategory).toBe("NEEDS_REVIEW");
   });
 });

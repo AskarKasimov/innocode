@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireTeacher } from "@/lib/auth";
 import { DecisionButtons } from "./decision-buttons";
@@ -15,6 +16,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
 
   return (
     <main style={{ maxWidth: 960, margin: "2rem auto", padding: "0 1rem" }}>
+      <p><Link href={`/teacher/assignments/${submission.assignmentId}`}>← {submission.assignment.title}</Link></p>
       <h1>{submission.studentName} — {submission.assignment.title}</h1>
       <p>Status: {submission.status} · Category: {submission.aiCategory ?? "—"}</p>
       {submission.errorMessage && <p style={{ color: "crimson" }}>Error: {submission.errorMessage}</p>}

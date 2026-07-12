@@ -1,10 +1,10 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { deriveCategory, type FlagVerdictValue } from "@/lib/category";
 import type { CodeRunner } from "@/lib/piston/types";
 import type { LlmClient } from "@/lib/llm/types";
 
 export interface PipelineDeps {
-  prisma: Pick<PrismaClient, "submission" | "flag"> | any;
+  prisma: Pick<PrismaClient, "submission" | "flag">;
   runner: CodeRunner;
   llm: LlmClient;
 }
@@ -34,7 +34,7 @@ export async function processSubmission(submissionId: string, deps: PipelineDeps
     });
     await prisma.submission.update({
       where: { id: submissionId },
-      data: { status: "ANALYZING", testResults },
+      data: { status: "ANALYZING", testResults: testResults as unknown as Prisma.InputJsonValue },
     });
 
     const llmResponse = await llm.analyze({

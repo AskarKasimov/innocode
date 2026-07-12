@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/db";
 import { TEACHER_COOKIE, requireTeacher } from "@/lib/auth";
@@ -13,6 +14,12 @@ export async function login(formData: FormData) {
   }
   const store = await cookies();
   store.set(TEACHER_COOKIE, password, { httpOnly: true, sameSite: "lax", path: "/" });
+  redirect("/teacher");
+}
+
+export async function logout() {
+  const store = await cookies();
+  store.delete(TEACHER_COOKIE);
   redirect("/teacher");
 }
 
@@ -35,5 +42,6 @@ export async function createAssignment(formData: FormData) {
     return { ok: false as const, error: "Title, description, language required" };
   }
   await prisma.assignment.create({ data: { title, description, language, criteria, tests } });
+  revalidatePath("/teacher");
   return { ok: true as const };
 }

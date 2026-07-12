@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { AiCategory } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireTeacher } from "@/lib/auth";
 
@@ -26,12 +27,13 @@ export default async function AssignmentDetail({
 
   const assignment = await prisma.assignment.findUniqueOrThrow({ where: { id } });
   const submissions = await prisma.submission.findMany({
-    where: { assignmentId: id, ...(category ? { aiCategory: category as any } : {}) },
+    where: { assignmentId: id, ...(category ? { aiCategory: category as AiCategory } : {}) },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <main style={{ maxWidth: 1024, margin: "2rem auto", padding: "0 1rem" }}>
+      <p><Link href="/teacher">← Assignments</Link></p>
       <h1>{assignment.title}</h1>
       <p>
         Filter:{" "}
