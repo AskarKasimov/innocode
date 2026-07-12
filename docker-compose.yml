@@ -55,7 +55,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: innocode-app:local
     command: ["npx", "prisma", "migrate", "deploy"]
     env_file: .env
     environment:
@@ -72,7 +71,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: innocode-app:local
     command: ["npm", "run", "db:seed"]
     env_file: .env
     environment:
@@ -89,7 +87,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: innocode-app:local
     ports:
       - "3000:3000"
     env_file: .env
