@@ -14,8 +14,8 @@ OpenAI-compatible LLM.
 
 ## Setup
 
-Everything — Postgres, Piston, schema migration, demo seed, and the Next.js app itself —
-runs via one `docker compose` command. There are no manual setup steps beyond the env file.
+Everything — Postgres, Piston, schema migration, and the Next.js app itself — runs via one
+`docker compose` command. There are no manual setup steps beyond the env file.
 
 ```bash
 cp .env.example .env
@@ -28,25 +28,27 @@ That's it. Compose's healthchecks and `depends_on` conditions sequence the rest
 automatically:
 
 ```
-app-db (healthy) ──► migrate (deploy) ──► seed ──► web
+app-db (healthy) ──► migrate (deploy) ──► web
 piston (healthy) ──► piston-init (installs python 3.12 runtime) ──► web
 ```
 
-`web` won't start serving until migrations, the seed, and the Piston runtime install have
-all completed successfully — `docker compose up -d` blocks on nothing (it's all
-backgrounded), but `docker compose ps` shows `migrate`/`seed`/`piston-init` as `Exited (0)`
-once done, and `web` flips to `running` only after.
+`web` won't start serving until migrations and the Piston runtime install have both
+completed successfully — `docker compose up -d` blocks on nothing (it's all backgrounded),
+but `docker compose ps` shows `migrate`/`piston-init` as `Exited (0)` once done, and `web`
+flips to `running` only after.
+
+The database starts empty — a teacher creates assignments through the dashboard.
 
 - Student submit page: http://localhost:3000/submit
 - Teacher dashboard: http://localhost:3000/teacher (password = `TEACHER_PASSWORD` in `.env`)
 
-The `web` service (and `migrate`/`seed`) bind-mount the repo into the container, so editing
-source or `prisma/schema.prisma` on the host is picked up without a rebuild — `web` hot-reloads,
-and re-running `docker compose up -d migrate seed` re-applies schema/seed changes. Rebuild
+The `web` service (and `migrate`) bind-mount the repo into the container, so editing source
+or `prisma/schema.prisma` on the host is picked up without a rebuild — `web` hot-reloads,
+and re-running `docker compose up -d migrate` re-applies schema changes. Rebuild
 (`docker compose up -d --build web`) only after changing `package.json` or the `Dockerfile`.
 
-Need a different language runtime than the seeded Python 3.12? Run the same request
-`piston-init` makes, with a different `language`/`version`:
+Need a different language runtime than Python 3.12? Run the same request `piston-init`
+makes, with a different `language`/`version`:
 ```bash
 curl -s -X POST http://localhost:2000/api/v2/packages -H "Content-Type: application/json" \
   -d '{"language":"javascript","version":"18.15.0"}'
@@ -60,7 +62,6 @@ infra services and run `npm run dev` directly:
 ```bash
 docker compose up -d app-db piston piston-init
 npm run db:migrate
-npm run db:seed
 npm run dev
 ```
 
@@ -88,7 +89,6 @@ teacher's assignment. List installed/available runtimes with
 | `npm run dev` | Next.js dev server |
 | `npm test` | Vitest unit suite |
 | `npm run db:migrate` | Apply Prisma migrations |
-| `npm run db:seed` | Seed demo assignment |
 | `npm run db:generate` | Regenerate Prisma client |
 
 ## Architecture

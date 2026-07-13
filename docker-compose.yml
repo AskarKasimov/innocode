@@ -67,22 +67,6 @@ services:
         condition: service_healthy
     restart: "no"
 
-  seed:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["npm", "run", "db:seed"]
-    env_file: .env
-    environment:
-      DATABASE_URL: "postgresql://innocode:innocode@app-db:5432/innocode?schema=public"
-    volumes:
-      - .:/app
-      - web-node-modules:/app/node_modules
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-    restart: "no"
-
   web:
     build:
       context: .
@@ -98,7 +82,7 @@ services:
       - web-node-modules:/app/node_modules
       - web-next-cache:/app/.next
     depends_on:
-      seed:
+      migrate:
         condition: service_completed_successfully
       piston-init:
         condition: service_completed_successfully
