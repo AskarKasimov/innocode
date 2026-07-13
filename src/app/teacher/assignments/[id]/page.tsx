@@ -8,11 +8,18 @@ function testsPassed(testResults: unknown): { passed: number; total: number } {
   return { passed: arr.filter((t) => t.passed).length, total: arr.length };
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  LOW_RISK: "#2e7d32",
-  NEEDS_REVIEW: "#c62828",
-  INSUFFICIENT_EVIDENCE: "#f9a825",
+const CATEGORY: Record<string, { label: string; color: string; bg: string }> = {
+  LOW_RISK: { label: "низкий риск", color: "#0d7a2b", bg: "#e4f8e9" },
+  NEEDS_REVIEW: { label: "нужна проверка", color: "#b32020", bg: "#fde8e8" },
+  INSUFFICIENT_EVIDENCE: { label: "мало данных", color: "#8a6d00", bg: "#fbf3d8" },
 };
+
+const FILTERS = [
+  { key: "", label: "Все" },
+  { key: "LOW_RISK", label: "Низкий риск" },
+  { key: "NEEDS_REVIEW", label: "Нужна проверка" },
+  { key: "INSUFFICIENT_EVIDENCE", label: "Мало данных" },
+];
 
 export default async function AssignmentDetail({
   params,
@@ -32,38 +39,85 @@ export default async function AssignmentDetail({
   });
 
   return (
-    <main style={{ maxWidth: 1024, margin: "2rem auto", padding: "0 1rem" }}>
-      <p><Link href="/teacher">← Assignments</Link></p>
-      <h1>{assignment.title}</h1>
-      <p>
-        Filter:{" "}
-        <Link href={`/teacher/assignments/${id}`}>All</Link>{" | "}
-        <Link href={`?category=LOW_RISK`}>Low risk</Link>{" | "}
-        <Link href={`?category=NEEDS_REVIEW`}>Needs review</Link>{" | "}
-        <Link href={`?category=INSUFFICIENT_EVIDENCE`}>Insufficient</Link>
-      </p>
-      <p><a href={`/teacher/assignments/${id}/export`}>Export CSV</a></p>
-      <table border={1} cellPadding={6} style={{ borderCollapse: "collapse", width: "100%" }}>
-        <thead>
-          <tr><th>Student</th><th>Tests</th><th>Category</th><th>Decision</th><th></th></tr>
-        </thead>
-        <tbody>
-          {submissions.map((s) => {
-            const t = testsPassed(s.testResults);
+    <main className="page stack" style={{ gap: 20 }}>
+      <Link href="/teacher" className="crumb">← задания</Link>
+
+      <section className="hero">
+        <span className="label" style={{ color: "var(--green)" }}>задание · {assignment.language}</span>
+        <h1>{assignment.title}</h1>
+        <p className="sub">{assignment.description}</p>
+      </section>
+
+      <div className="spread">
+        <div className="row">
+          {FILTERS.map((f) => {
+            const active = (category ?? "") === f.key;
+            const href = f.key ? `/teacher/assignments/${id}?category=${f.key}` : `/teacher/assignments/${id}`;
             return (
-              <tr key={s.id}>
-                <td>{s.studentName}</td>
-                <td>{s.status === "DONE" || s.status === "ANALYZING" ? `${t.passed}/${t.total}` : s.status}</td>
-                <td style={{ color: s.aiCategory ? CATEGORY_COLORS[s.aiCategory] : undefined }}>
-                  {s.aiCategory ?? "—"}
-                </td>
-                <td>{s.teacherDecision}</td>
-                <td><Link href={`/teacher/submissions/${s.id}`}>Open</Link></td>
-              </tr>
+              <Link
+                key={f.key || "all"}
+                href={href}
+                className={active ? "btn btn-dark" : "btn btn-ghost"}
+                style={{ padding: "8px 14px", fontSize: 12 }}
+              >
+                {f.label}
+              </Link>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+        <a href={`/teacher/assignments/${id}/export`} className="btn btn-green" style={{ padding: "8px 16px", fontSize: 13 }}>
+          ⬇ CSV
+        </a>
+      </div>
+
+      {submissions.length === 0 ? (
+        <div className="card muted">Решений пока нет.</div>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Студент</th>
+                <th>Тесты</th>
+                <th>Категория</th>
+                <th>Решение</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {submissions.map((s) => {
+                const t = testsPassed(s.testResults);
+                const cat = s.aiCategory ? CATEGORY[s.aiCategory] : null;
+                return (
+                  <tr key={s.id}>
+                    <td style={{ fontWeight: 600 }}>{s.studentName}</td>
+                    <td>
+                      {s.status === "DONE" || s.status === "ANALYZING"
+                        ? `${t.passed}/${t.total}`
+                        : <span className="faint">{s.status}</span>}
+                    </td>
+                    <td>
+                      {cat ? (
+                        <span className="badge" style={{ background: cat.bg, color: cat.color }}>
+                          {cat.label}
+                        </span>
+                      ) : (
+                        <span className="faint">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="muted">{s.teacherDecision === "NONE" ? "—" : s.teacherDecision}</span>
+                    </td>
+                    <td>
+                      <Link href={`/teacher/submissions/${s.id}`} className="link">открыть →</Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   );
 }

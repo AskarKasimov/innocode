@@ -10,10 +10,13 @@ export function LoginForm() {
     if (res && !res.ok) setError(res.error);
   }
   return (
-    <form action={action} style={{ display: "grid", gap: 8, maxWidth: 320 }}>
-      <input type="password" name="password" placeholder="Teacher password" required />
-      <button type="submit">Log in</button>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
+    <form action={action} className="card stack" style={{ gap: 14, maxWidth: 380 }}>
+      <label className="field">
+        <span className="label">пароль преподавателя</span>
+        <input type="password" name="password" placeholder="••••••••" required />
+      </label>
+      <button type="submit" className="btn btn-green btn-block">🔓 Войти</button>
+      {error && <p className="mono" style={{ color: "#c0392b" }}>{error}</p>}
     </form>
   );
 }

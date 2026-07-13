@@ -2,12 +2,30 @@
 
 import { setDecision } from "./actions";
 
+const LABEL: Record<string, string> = {
+  NONE: "решение не принято",
+  APPROVED: "принято ✅",
+  DECLINED: "отклонено ⛔",
+};
+
 export function DecisionButtons({ id, current }: { id: string; current: string }) {
   return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <button onClick={() => setDecision(id, "APPROVED")} disabled={current === "APPROVED"}>Approve</button>
-      <button onClick={() => setDecision(id, "DECLINED")} disabled={current === "DECLINED"}>Decline</button>
-      <span>Current: {current}</span>
+    <div className="row">
+      <button
+        className="btn btn-green"
+        onClick={() => setDecision(id, "APPROVED")}
+        disabled={current === "APPROVED"}
+      >
+        ✅ Принять
+      </button>
+      <button
+        className="btn btn-ghost"
+        onClick={() => setDecision(id, "DECLINED")}
+        disabled={current === "DECLINED"}
+      >
+        ⛔ Отклонить
+      </button>
+      <span className="label">{LABEL[current] ?? current}</span>
     </div>
   );
 }

@@ -10,11 +10,17 @@ export default async function SubmitPage() {
     orderBy: { createdAt: "desc" },
   });
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-      <p><Link href="/">← Home</Link></p>
-      <h1>Submit your solution</h1>
-      {assignments.length === 0 && <p>No assignments available yet — check back later.</p>}
-      <SubmitForm assignments={assignments} />
+    <main className="page-narrow stack">
+      <Link href="/" className="crumb">← на главную</Link>
+      <div>
+        <span className="label">студент</span>
+        <h1 style={{ fontSize: 30, marginTop: 6 }}>Отправить решение</h1>
+      </div>
+      {assignments.length === 0 ? (
+        <div className="card muted">Пока нет доступных заданий — загляни позже.</div>
+      ) : (
+        <SubmitForm assignments={assignments} />
+      )}
     </main>
   );
 }
