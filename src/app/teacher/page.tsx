@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { isTeacher } from "@/lib/auth";
+import { listInstalledLanguages } from "@/lib/piston/runtimes";
 import { LoginForm } from "./login-form";
 import { AssignmentForm } from "./assignment-form";
 import { logout } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+const FALLBACK_LANGUAGES = ["python", "javascript", "typescript", "cpp", "c", "java", "go"];
 
 export default async function TeacherPage() {
   if (!(await isTeacher())) {
@@ -24,6 +27,8 @@ export default async function TeacherPage() {
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { submissions: true } } },
   });
+  const installed = await listInstalledLanguages();
+  const languages = installed.length ? installed : FALLBACK_LANGUAGES;
 
   return (
     <main className="page stack" style={{ gap: 22 }}>
@@ -69,7 +74,7 @@ export default async function TeacherPage() {
 
       <section className="stack" style={{ gap: 12 }}>
         <span className="label">➕ новое задание</span>
-        <AssignmentForm />
+        <AssignmentForm languages={languages} />
       </section>
     </main>
   );
