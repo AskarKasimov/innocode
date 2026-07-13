@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireTeacher } from "@/lib/auth";
 import { DecisionButtons } from "./decision-buttons";
+import { AutoRefresh } from "../../auto-refresh";
 
 const CATEGORY: Record<string, { label: string; color: string; bg: string }> = {
   LOW_RISK: { label: "низкий риск", color: "#0d7a2b", bg: "#e4f8e9" },
@@ -29,6 +30,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
 
   return (
     <main className="page stack" style={{ gap: 20 }}>
+      <AutoRefresh active={submission.status !== "DONE" && submission.status !== "ERROR"} />
       <Link href={`/teacher/assignments/${submission.assignmentId}`} className="crumb">
         ← {submission.assignment.title}
       </Link>
