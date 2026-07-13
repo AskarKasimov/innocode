@@ -1,18 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createSubmission } from "./actions";
 
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "в очереди",
-  TESTING: "гоняем тесты",
-  ANALYZING: "AI анализирует",
-  DONE: "готово",
-  ERROR: "ошибка",
-};
-
 export function SubmitForm({ assignments }: { assignments: { id: string; title: string }[] }) {
-  const [status, setStatus] = useState<string | null>(null);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [sourceCode, setSourceCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -20,20 +13,6 @@ export function SubmitForm({ assignments }: { assignments: { id: string; title: 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) setSourceCode(await file.text());
-  }
-
-  async function poll(id: string) {
-    for (;;) {
-      const res = await fetch(`/api/submissions/${id}/status`);
-      const data = await res.json();
-      setStatus(data.status);
-      if (data.status === "DONE" || data.status === "ERROR") {
-        if (data.status === "ERROR") setError(data.errorMessage ?? "Processing error");
-        setBusy(false);
-        return;
-      }
-      await new Promise((r) => setTimeout(r, 1500));
-    }
   }
 
   async function action(formData: FormData) {
@@ -46,12 +25,8 @@ export function SubmitForm({ assignments }: { assignments: { id: string; title: 
       setBusy(false);
       return;
     }
-    setStatus("PENDING");
-    void poll(result.submissionId);
+    router.push(`/submit/${result.submissionId}`);
   }
-
-  const done = status === "DONE";
-  const failed = status === "ERROR";
 
   return (
     <form action={action} className="card stack" style={{ gap: 16 }}>
@@ -88,19 +63,9 @@ export function SubmitForm({ assignments }: { assignments: { id: string; title: 
       </label>
 
       <button type="submit" className="btn btn-green btn-block" disabled={busy}>
-        {busy ? "⏳ Обработка…" : "🚀 Отправить"}
+        {busy ? "⏳ Отправка…" : "🚀 Отправить"}
       </button>
 
-      {status && (
-        <div className="banner" style={{ justifyContent: "space-between" }}>
-          <span className="mono">
-            {done ? "✅" : failed ? "⛔" : "🦫"}{" "}
-            статус: {STATUS_LABEL[status] ?? status}
-          </span>
-          {!done && !failed && <span className="faint mono">опрашиваем…</span>}
-        </div>
-      )}
-      {done && <p className="mono" style={{ color: "var(--green-hover)" }}>Решение принято и обработано.</p>}
       {error && <p className="mono" style={{ color: "#c0392b" }}>{error}</p>}
     </form>
   );
