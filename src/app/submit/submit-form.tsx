@@ -12,7 +12,19 @@ export function SubmitForm({ assignments }: { assignments: { id: string; title: 
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) setSourceCode(await file.text());
+    if (!file) return;
+    // Files saved by Windows editors are often cp1251/ANSI, not UTF-8. Reading
+    // them as UTF-8 mangles Cyrillic into ? / replacement chars, which then
+    // runs and prints garbage. Decode UTF-8 strictly; on failure fall back to
+    // windows-1251, and strip a leading BOM either way.
+    const buf = await file.arrayBuffer();
+    let text: string;
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
+    } catch {
+      text = new TextDecoder("windows-1251").decode(buf);
+    }
+    setSourceCode(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
   }
 
   async function action(formData: FormData) {
