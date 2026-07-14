@@ -8,9 +8,11 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 COPY . .
-RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3000
 
-ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
+# Regenerate the Prisma client (the node_modules volume may predate the current
+# schema), then exec the service command. Inlined rather than a shell script so
+# it can't be broken by CRLF line endings from a Windows checkout.
+ENTRYPOINT ["sh", "-c", "npx prisma generate && exec \"$@\"", "sh"]
 CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]
