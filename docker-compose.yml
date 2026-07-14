@@ -38,17 +38,19 @@ services:
       retries: 20
     restart: unless-stopped
 
+  # Installs a broad set of popular language runtimes into Piston, in the
+  # background — web does NOT wait on this (installing ~18 runtimes takes a
+  # while). Languages appear in the teacher's selector as each finishes.
   piston-init:
-    image: curlimages/curl:8.11.0
+    image: node:20-bookworm-slim
+    command: ["node", "/app/scripts/piston-install.mjs"]
+    environment:
+      PISTON_URL: "http://piston:2000"
+    volumes:
+      - ./scripts:/app/scripts:ro
     depends_on:
       piston:
         condition: service_healthy
-    command:
-      [
-        "curl", "-sS", "-X", "POST", "http://piston:2000/api/v2/packages",
-        "-H", "Content-Type: application/json",
-        "-d", "{\"language\":\"python\",\"version\":\"3.12.0\"}",
-      ]
     restart: "no"
 
   migrate:
@@ -84,8 +86,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      piston-init:
-        condition: service_completed_successfully
+      piston:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

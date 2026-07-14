@@ -28,14 +28,19 @@ That's it. Compose's healthchecks and `depends_on` conditions sequence the rest
 automatically:
 
 ```
-app-db (healthy) ──► migrate (deploy) ──► web
-piston (healthy) ──► piston-init (installs python 3.12 runtime) ──► web
+app-db (healthy) ──► migrate (deploy) ──┐
+                                        ├──► web
+piston (healthy) ────────────────────────┘
+piston (healthy) ──► piston-init (installs ~18 popular runtimes, in the background)
 ```
 
-`web` won't start serving until migrations and the Piston runtime install have both
-completed successfully — `docker compose up -d` blocks on nothing (it's all backgrounded),
-but `docker compose ps` shows `migrate`/`piston-init` as `Exited (0)` once done, and `web`
-flips to `running` only after.
+`web` starts once migrations are applied and Piston is healthy. `piston-init` installs a
+broad set of language runtimes (python, javascript, typescript, c, cpp, csharp, java,
+kotlin, scala, go, rust, swift, ruby, php, perl, lua, bash, dart) **in the background** — it
+does not block `web`, since installing that many runtimes takes a while on first run. Each
+language appears in the teacher's language selector as soon as its install finishes; the
+downloads are cached in `./.docker-cache/piston-packages`, so subsequent `up`s are instant.
+Watch progress with `docker compose logs -f piston-init`.
 
 The database starts empty — a teacher creates assignments through the dashboard.
 
@@ -47,11 +52,12 @@ or `prisma/schema.prisma` on the host is picked up without a rebuild — `web` h
 and re-running `docker compose up -d migrate` re-applies schema changes. Rebuild
 (`docker compose up -d --build web`) only after changing `package.json` or the `Dockerfile`.
 
-Need a different language runtime than Python 3.12? Run the same request `piston-init`
-makes, with a different `language`/`version`:
+`piston-init` installs the popular runtimes listed above. To add another one (or pin a
+specific version), POST it directly — see `scripts/piston-install.mjs` for the wanted-
+language list:
 ```bash
 curl -s -X POST http://localhost:2000/api/v2/packages -H "Content-Type: application/json" \
-  -d '{"language":"javascript","version":"18.15.0"}'
+  -d '{"language":"haskell","version":"9.0.1"}'
 ```
 
 ### Running without Docker for the app

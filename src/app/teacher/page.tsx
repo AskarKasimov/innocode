@@ -8,7 +8,11 @@ import { logout } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-const FALLBACK_LANGUAGES = ["python", "javascript", "typescript", "cpp", "c", "java", "go"];
+const FALLBACK_LANGUAGES = [
+  "python", "javascript", "typescript", "c", "cpp", "csharp",
+  "java", "kotlin", "scala", "go", "rust", "swift",
+  "ruby", "php", "perl", "lua", "bash", "dart",
+];
 
 export default async function TeacherPage() {
   if (!(await isTeacher())) {
